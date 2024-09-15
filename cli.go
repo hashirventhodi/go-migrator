@@ -10,13 +10,13 @@ import (
 )
 
 var (
-	dbHost     string
-	dbPort     int
-	dbUser     string
-	dbPassword string
-	dbName     string
-	outputDir  string
-	debug      bool
+	dbHost1     string
+	dbPort1     int
+	dbUser1     string
+	dbPassword1 string
+	dbName1     string
+	outputDir1  string
+	debug1      bool
 )
 
 var rootCmd = &cobra.Command{

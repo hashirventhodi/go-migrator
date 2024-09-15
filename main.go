@@ -17,14 +17,14 @@ import (
 
 // Command-line flags
 var (
-	dbHost     string
-	dbPort     int
-	dbUser     string
-	dbPassword string
-	dbName     string
-	outputDir  string
-	debug      bool
-	models     []interface{}
+	dbHost      string
+	dbPort      int
+	dbUser      string
+	dbPassword  string
+	dbName      string
+	outputDir   string
+	debug       bool
+	versionFlag bool
 )
 
 func init() {
@@ -35,37 +35,51 @@ func init() {
 	flag.StringVar(&dbName, "dbname", "", "Database name")
 	flag.StringVar(&outputDir, "output", "migrations", "Output directory for migration files")
 	flag.BoolVar(&debug, "debug", false, "Enable debug logging")
+	flag.BoolVar(&versionFlag, "version", false, "Prints the version of the CLI")
+}
+
+// ModelRegistry stores registered models
+var ModelRegistry []interface{}
+
+// RegisterModel allows users to register their models
+func RegisterModel(model interface{}) {
+	ModelRegistry = append(ModelRegistry, model)
 }
 
 func main() {
 	flag.Parse()
 
+	if versionFlag {
+		fmt.Println("go-migrator version 0.0.3")
+		os.Exit(0)
+	}
+
 	if dbUser == "" || dbName == "" {
 		log.Fatal("Database user and name are required")
 	}
 
-	if len(models) == 0 {
-		log.Fatal("No models registered")
-	}
-
+	// Construct the DSN
 	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		dbHost, dbPort, dbUser, dbPassword, dbName)
 
+	// Connect to the database
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
+	// Get the underlying SQL database
 	sqlDB, err := db.DB()
 	if err != nil {
 		log.Fatalf("Failed to get database: %v", err)
 	}
 
+	// Generate migrations
 	generateMigrations(db, sqlDB)
 }
 
 func generateMigrations(db *gorm.DB, sqlDB *sql.DB) {
-	for _, model := range models {
+	for _, model := range ModelRegistry {
 		tableName := db.NamingStrategy.TableName(reflect.TypeOf(model).Elem().Name())
 
 		if debug {
@@ -105,6 +119,8 @@ func generateMigrations(db *gorm.DB, sqlDB *sql.DB) {
 		}
 	}
 }
+
+// ... [Rest of the functions remain the same]
 
 func compareModelToTable(db *gorm.DB, sqlDB *sql.DB, model interface{}) []string {
 	var differences []string
@@ -185,13 +201,13 @@ func createMigrationFile(name, content string, isUp bool) {
 		log.Fatalf("Failed to create migrations directory: %v", err)
 	}
 
-	filePath := filepath.Join(outputDir, filename)
-	err = os.WriteFile(filePath, []byte(content), 0644)
+	filepath := filepath.Join(outputDir, filename)
+	err = os.WriteFile(filepath, []byte(content), 0644)
 	if err != nil {
 		log.Fatalf("Failed to write migration file: %v", err)
 	}
 
-	fmt.Printf("Created migration file: %s\n", filePath)
+	fmt.Printf("Created migration file: %s\n", filepath)
 	if debug {
 		fmt.Printf("Content:\n%s\n", content)
 	}

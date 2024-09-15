@@ -1,6 +1,6 @@
 // File: migrator/cli.go
 
-package migrator
+package main
 
 import (
 	"fmt"

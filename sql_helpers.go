@@ -1,6 +1,6 @@
 // File: migrator/sql_helpers.go
 
-package migrator
+package main
 
 import (
 	"fmt"

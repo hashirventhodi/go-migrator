@@ -1,6 +1,6 @@
 // File: migrator/migrator.go
 
-package migrator
+package main
 
 import (
 	"database/sql"

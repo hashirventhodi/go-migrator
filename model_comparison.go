@@ -1,6 +1,6 @@
 // File: migrator/model_comparison.go
 
-package migrator
+package main
 
 import (
 	"fmt"
